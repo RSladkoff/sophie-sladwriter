@@ -1,0 +1,39 @@
+{
+  "books": [],
+  "videos": [
+    {
+      "id": "Ub8eA8kKwW8",
+      "title": "«Мертвый мир» 2 серия",
+      "section": "series",
+      "description": "Вторая серия, пока не добавлена в плейлист"
+    }
+  ],
+  "playlists": [
+    {
+      "id": "PLcXvSfbT77NM",
+      "title": "Сериал «Никому не говори»",
+      "section": "series",
+      "description": "Для ценителей американской эстетики старшей школы"
+    },
+    {
+      "id": "PLXm8jrWIxnSg",
+      "title": "Сериал «Мертвый мир»",
+      "section": "series",
+      "description": "Всем любителям зомби апокалипсиса и фанатам «Ходячих мертвецов»"
+    }
+  ],
+  "channels": [
+    {
+      "name": "Litnet",
+      "url": "https://litnet.com/ru/sofya-u13241401/novels"
+    },
+    {
+      "name": "YouTube",
+      "url": "https://www.youtube.com/@sophie_sladwriter"
+    },
+    {
+      "name": "Instagram",
+      "url": "https://www.instagram.com/sophie_sladauthor"
+    }
+  ]
+}
