@@ -26,11 +26,25 @@ function renderBooks(container, books) {
     return;
   }
   books.forEach((book) => {
-    const card = el("div", { class: "card" });
+    const card = el("article", { class: "card book-card" });
+    const wrap = el("div", { class: "cover-wrap" });
+    if (book.cover) {
+      wrap.appendChild(el("img", { class: "cover", src: book.cover, alt: `Обложка: ${book.title}`, loading: "lazy" }));
+    }
+    wrap.appendChild(el("span", { class: "badge-18", title: "Материал для взрослых" }, "18+"));
+    card.appendChild(wrap);
     card.appendChild(el("h3", {}, book.title));
-    card.appendChild(el("p", {}, book.description || ""));
+    if (book.author) card.appendChild(el("p", { class: "meta" }, book.author));
+    if (book.tags && book.tags.length) {
+      const tags = el("div", { class: "tags" });
+      book.tags.forEach((tag) => tags.appendChild(el("span", { class: "tag" }, `#${tag}`)));
+      card.appendChild(tags);
+    }
+    (book.description || "").split("\n\n").forEach((part) => {
+      if (part.trim()) card.appendChild(el("p", {}, part.trim()));
+    });
     if (book.url) {
-      card.appendChild(el("a", { class: "btn", href: book.url, target: "_blank", rel: "noopener" }, "Читать"));
+      card.appendChild(el("a", { class: "btn", href: book.url, target: "_blank", rel: "noopener" }, "Читать на Litnet"));
     }
     container.appendChild(card);
   });
