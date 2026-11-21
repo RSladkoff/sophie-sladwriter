@@ -20,10 +20,21 @@
       <h1>Книги и истории, которые оживают</h1>
       <p>Пишу о сложных, живых персонажах и неожиданных поворотах судьбы. Мои книги оживаю при помощи ИИ в коротких видео.</p>
       <a class="btn" href="books.html">Книги</a>
-      <a class="btn" href="playlist.html">Видео</a>
+      <a class="btn ghost" href="playlist.html">Видео</a>
     </section>
-    <h2>Площадки</h2>
-    <div id="channels"></div>
+    <section>
+      <h2>Новинки</h2>
+      <div class="slider" id="slider">
+        <button class="arrow prev" aria-label="Назад">&#8249;</button>
+        <div class="slides" id="slides"></div>
+        <button class="arrow next" aria-label="Вперёд">&#8250;</button>
+      </div>
+      <div class="slider-ctrl" id="dots"></div>
+    </section>
+    <section>
+      <h2>Площадки</h2>
+      <div id="channels" class="grid"></div>
+    </section>
   </main>
   <footer>© Sophie Slad</footer>
   <script src="js/main.js"></script>

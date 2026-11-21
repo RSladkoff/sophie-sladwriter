@@ -20,6 +20,10 @@ async function loadData() {
   return response.json();
 }
 
+function splitParagraphs(text) {
+  return (text || "").split("\n\n").map((part) => part.trim()).filter(Boolean);
+}
+
 function renderBooks(container, books) {
   if (!books.length) {
     emptyNote(container, "Книги скоро появятся.");
@@ -40,14 +44,72 @@ function renderBooks(container, books) {
       book.tags.forEach((tag) => tags.appendChild(el("span", { class: "tag" }, `#${tag}`)));
       card.appendChild(tags);
     }
-    (book.description || "").split("\n\n").forEach((part) => {
-      if (part.trim()) card.appendChild(el("p", {}, part.trim()));
-    });
+    splitParagraphs(book.description).forEach((part) => card.appendChild(el("p", {}, part)));
     if (book.url) {
       card.appendChild(el("a", { class: "btn", href: book.url, target: "_blank", rel: "noopener" }, "Читать на Litnet"));
     }
     container.appendChild(card);
   });
+}
+
+function renderSlider(books) {
+  const slider = document.getElementById("slider");
+  const track = document.getElementById("slides");
+  const dots = document.getElementById("dots");
+  const items = books.filter((book) => book.cover);
+  if (!items.length) {
+    slider.closest("section").hidden = true;
+    return;
+  }
+  items.forEach((book, i) => {
+    const slide = el("div", { class: "slide" });
+    const wrap = el("div", { class: "cover-wrap" });
+    wrap.appendChild(el("img", { src: book.cover, alt: `Обложка: ${book.title}`, loading: "lazy" }));
+    wrap.appendChild(el("span", { class: "badge-18" }, "18+"));
+    slide.appendChild(wrap);
+    const info = el("div");
+    info.appendChild(el("h3", {}, book.title));
+    info.appendChild(el("p", {}, splitParagraphs(book.description)[0] || ""));
+    if (book.url) {
+      info.appendChild(el("a", { class: "btn", href: book.url, target: "_blank", rel: "noopener" }, "Читать на Litnet"));
+    }
+    slide.appendChild(info);
+    track.appendChild(slide);
+    const dot = el("button", { class: "dot", "aria-label": `Слайд ${i + 1}` });
+    dot.addEventListener("click", () => {
+      go(i);
+      restart();
+    });
+    dots.appendChild(dot);
+  });
+
+  const total = items.length;
+  let index = 0;
+  let timer = null;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function go(i) {
+    index = (i + total) % total;
+    track.style.transform = `translateX(-${index * 100}%)`;
+    [...dots.children].forEach((d, k) => d.classList.toggle("active", k === index));
+  }
+
+  function restart() {
+    clearInterval(timer);
+    if (!reduceMotion && total > 1) timer = setInterval(() => go(index + 1), 6000);
+  }
+
+  slider.querySelector(".prev").addEventListener("click", () => { go(index - 1); restart(); });
+  slider.querySelector(".next").addEventListener("click", () => { go(index + 1); restart(); });
+  slider.addEventListener("mouseenter", () => clearInterval(timer));
+  slider.addEventListener("mouseleave", restart);
+
+  if (total < 2) {
+    slider.querySelectorAll(".arrow").forEach((a) => { a.hidden = true; });
+    dots.hidden = true;
+  }
+  go(0);
+  restart();
 }
 
 function renderVideos(container, videos, playlists) {
@@ -75,13 +137,12 @@ function renderVideos(container, videos, playlists) {
       });
       items.forEach((video) => {
         const card = el("div", { class: "card video-card" });
-        const frame = el("iframe", {
+        card.appendChild(el("iframe", {
           src: `https://www.youtube.com/embed/${encodeURIComponent(video.id)}`,
           title: video.title,
           allow: "accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture",
           allowfullscreen: "",
-        });
-        card.appendChild(frame);
+        }));
         card.appendChild(el("h3", {}, video.title));
         if (video.description) card.appendChild(el("p", {}, video.description));
         grid.appendChild(card);
@@ -93,20 +154,43 @@ function renderVideos(container, videos, playlists) {
 }
 
 function renderChannels(container, channels) {
-  const block = el("section");
-  block.appendChild(el("h2", {}, "Где читать и смотреть"));
-  const grid = el("div", { class: "grid" });
   channels.forEach((channel) => {
-    const card = el("div", { class: "card" });
+    const card = el("a", { class: "card channel-card", href: channel.url, target: "_blank", rel: "noopener" });
     card.appendChild(el("h3", {}, channel.name));
-    card.appendChild(el("a", { class: "btn", href: channel.url, target: "_blank", rel: "noopener" }, "Открыть"));
-    grid.appendChild(card);
+    card.appendChild(el("p", {}, "Открыть →"));
+    container.appendChild(card);
   });
-  block.appendChild(grid);
-  container.appendChild(block);
+}
+
+function markActiveLink() {
+  const current = location.pathname.split("/").pop() || "index.html";
+  document.querySelectorAll("nav a").forEach((a) => {
+    if (a.getAttribute("href") === current) a.setAttribute("aria-current", "page");
+  });
+}
+
+function initReveal() {
+  const items = [...document.querySelectorAll("section, .hero, .card")].filter((node) => !node.closest("[hidden]"));
+  if (!("IntersectionObserver" in window)) {
+    items.forEach((node) => node.classList.add("in"));
+    return;
+  }
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("in");
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  items.forEach((node) => {
+    node.classList.add("reveal");
+    observer.observe(node);
+  });
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+  markActiveLink();
   const data = await loadData();
   const page = document.body.dataset.page;
 
@@ -117,6 +201,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderVideos(document.getElementById("playlist"), data.videos, data.playlists);
   }
   if (page === "home") {
+    renderSlider(data.books);
     renderChannels(document.getElementById("channels"), data.channels);
   }
+  initReveal();
 });
